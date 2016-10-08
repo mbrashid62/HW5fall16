@@ -2,8 +2,7 @@
 
 Given /^I am on the RottenPotatoes home page$/ do
   visit movies_path
- end
-
+end
 
  When /^I have added a movie with title "(.*?)" and rating "(.*?)"$/ do |title, rating|
   visit new_movie_path
@@ -19,7 +18,7 @@ Given /^I am on the RottenPotatoes home page$/ do
        result = true
        break
      end
-   end  
+   end
   expect(result).to be_truthy
  end
 
@@ -33,7 +32,7 @@ Given /^I am on the RottenPotatoes home page$/ do
  end
 
  When /^I have edited the movie "(.*?)" to change the rating to "(.*?)"$/ do |movie, rating|
-  click_on "Edit"
+  click_on 'Edit'
   select rating, :from => 'Rating'
   click_button 'Update Movie Info'
  end
@@ -42,32 +41,49 @@ Given /^I am on the RottenPotatoes home page$/ do
 # New step definitions to be completed for HW5. 
 # Note that you may need to add additional step definitions beyond these
 
-
-# Add a declarative step here for populating the DB with movies.
-
 Given /the following movies have been added to RottenPotatoes:/ do |movies_table|
-  pending  # Remove this statement when you finish implementing the test step
+
   movies_table.hashes.each do |movie|
-    # Each returned movie will be a hash representing one row of the movies_table
-    # The keys will be the table headers and the values will be the row contents.
-    # Entries can be directly to the database with ActiveRecord methods
-    # Add the necessary Active Record call(s) to populate the database.
+    Movie.create!(movie)
   end
 end
 
 When /^I have opted to see movies rated: "(.*?)"$/ do |arg1|
-  # HINT: use String#split to split up the rating_list, then
-  # iterate over the ratings and check/uncheck the ratings
-  # using the appropriate Capybara command(s)
-  pending  #remove this statement after implementing the test step
+
+  ratings = 'G PG PG-13 NC-17 R'.split(' ')
+
+  ratings.each do |rating|
+    uncheck "ratings_#{rating}"
+  end
+
+  arg1.split(', ').each do |rating|
+    check "ratings_#{rating}"
+  end
+
+  click_button 'ratings_submit'
 end
 
 Then /^I should see only movies rated: "(.*?)"$/ do |arg1|
-  pending  #remove this statement after implementing the test step
+
+  ratings_selected = arg1.split(', ')
+  does_contain_filtered_movie = true
+
+  all('tr').each do |tr|
+    ratings_selected.each do |selected_rating|
+      if tr.has_content?(selected_rating) == true
+        does_contain_filtered_movie = true
+        break
+      else
+        does_contain_filtered_movie = false
+      end
+    end
+  end
+  expect(does_contain_filtered_movie).to be_truthy
 end
 
 Then /^I should see all of the movies$/ do
-  pending  #remove this statement after implementing the test step
+  rows = Movie.all
+  rows.length.should == page.all('table#movies tr').count - 1
 end
 
 
